@@ -35,6 +35,8 @@ def add_russian_stresses(src_file_path, working_folder, name, src_lan):
     src_file_path = f"{working_folder}/{name}_st_em_a.{src_lan}"
     open(src_file_path, "w").write(out_str)
 
+    return src_file_path
+
 
 
 def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, title, author, chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet=None,
@@ -90,7 +92,7 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
 
     # add russian stresses
     if src_lan == "ru":
-        add_russian_stresses(src_file_path, working_folder, name, src_lan)
+        src_file_path = add_russian_stresses(src_file_path, working_folder, name, src_lan)
 
     # use the resulting alignment file to create aligned sentence document
     out_str = ""
