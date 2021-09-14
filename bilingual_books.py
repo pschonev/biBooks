@@ -4,19 +4,15 @@ from pathlib import Path
 from txt_to_html import hun2html
 
 
-def create_folder(data_folder, name):
-    working_folder = Path(data_folder).absolute() / name
+def create_folder(folder):
 
-    # create folder where all the files are located
-    path = Path(working_folder)
+    path = Path(folder)
     try:
         path.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        print(f"Folder is already there - {working_folder}")
+        print(f"Folder is already there - {folder}")
     else:
-        print(f"Folder was created at {working_folder}")
-
-    return working_folder
+        print(f"Folder was created at {folder}")
 
 
 def add_russian_stresses(src_file_path, working_folder, name, src_lan):
@@ -46,12 +42,12 @@ def download_models(my_env):
 
 
 
-def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, title, author, chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet=None,
+def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, title, author, chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
          overlaps="10", align_size="10", search_buffer="10", ebook_format="mobi"):
 
     # create all folder and file names
-    working_folder = create_folder(data_folder, name)
-    stylesheet = f"{Path().absolute()}/lrstyle.css" if not stylesheet else stylesheet
+    working_folder = f"{data_folder}/{name}"
+    create_folder(working_folder)
 
     src_overlap = f"{working_folder}/{name}_overlaps.{src_lan}"
     tgt_overlap = f"{working_folder}/{name}_overlaps.{tgt_lan}"
