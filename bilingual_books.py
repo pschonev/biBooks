@@ -1,8 +1,9 @@
+from re import search
 import subprocess
 import os
 from pathlib import Path
-from urllib import request
 import urllib
+import configargparse
 from txt_to_html import hun2html
 
 
@@ -48,8 +49,8 @@ def download_models(model_folder = "laser/models"):
 
 
 
-def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, title, author, chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
-         overlaps="10", align_size="10", search_buffer="10", ebook_format="mobi"):
+def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="data/books", chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
+         overlaps=10, align_size=10, search_buffer=10, ebook_format="epub"):
 
     # create all folder and file names
     working_folder = f"{data_folder}/{name}"
@@ -71,10 +72,10 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
     commands = [
         # cmd_overlap_src
         ["python", "./vecalign/overlap.py",
-         "-i", src_file_path,  "-o", src_overlap, "-n", overlaps],
+         "-i", src_file_path,  "-o", src_overlap, "-n", str(overlaps)],
         # cmd_overlap_tgt
         ["python", "./vecalign/overlap.py",
-         "-i", tgt_file_path,  "-o", tgt_overlap, "-n", overlaps],
+         "-i", tgt_file_path,  "-o", tgt_overlap, "-n", str(overlaps)],
 
         # cmd_emb_src
         ["./laser/tasks/embed/embed.sh",
@@ -83,13 +84,14 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
         ["./laser/tasks/embed/embed.sh",
          tgt_overlap, tgt_lan, tgt_emb]]
 
-    cmd_align = ["python", "./vecalign/vecalign.py", "-v", "--alignment_max_size", align_size, "--search_buffer_size", search_buffer,
+    cmd_align = ["python", "./vecalign/vecalign.py", "-v", "--alignment_max_size", str(align_size), "--search_buffer_size", str(search_buffer),
                  "--src", src_file_path, "--tgt", tgt_file_path, "--src_embed", src_overlap, src_emb,
                  "--tgt_embed", tgt_overlap, tgt_emb]
 
     my_env = os.environ.copy()
     my_env["LASER"] = "./laser"
 
+    # download laser models if missing
     download_models()
 
     # run commands to create sentence overlaps with vecalign/overlap.py and get embeddings for them from LASER laser/tasks/embed/embed.sh
@@ -118,30 +120,39 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
     open(html_file, "w").write(
         hun2html(out_str, stylesheet, chapter_regex=chapter_regex))
 
-    # convert HTML to ebook
+    # convert HTML to ebook using Calibre
     cmd_ebook = ["ebook-convert", html_file, ebook_file,
                  "--linearize-tables", "--authors", author, "--title", title]
     subprocess.check_call(cmd_ebook, env=my_env)
 
 
 if __name__ == '__main__':
-    name = 'hp7'
 
-    book_titles = {
-        'hp1': ('Гарри Поттер и Философский Камень', "Book 1 - The Philosopher's Stone"),
-        'hp2': ('Гарри Поттер и Тайная Комната', 'Book 2 - The Chamber of Secrets'),
-        'hp3': ('Гарри Поттер и Узник Азкабана', 'Book 3 - The Prisoner of Azkaban'),
-        'hp4': ('Гарри Поттер и Кубок Огня', 'Book 4 - The Goblet of Fire'),
-        'hp5': ('Гарри Поттер и Орден Феникса', 'Book 5 - The Order of the Phoenix'),
-        'hp6': ('Гарри Поттер и Принц-Полукровка', 'Book 6 - The Half Blood Prince'),
-        'hp7': ('Гарри Поттер и Дары Смерти', 'Book 7 - The Deathly Hallows')
-    }
-    title, _ = book_titles[name]
-    params = dict(src_file_path=f"./data/books/{name}/{name}_st.ru",
-                  tgt_file_path=f"./data/books/{name}/{name}_st.en",
-                  data_folder="data/books", name=name, src_lan="ru", tgt_lan="en",
-                  title=title, author="J. K. Rowling",
-                  chapter_regex=r"Глав.*\d\.", size=14, stylesheet=None,
-                  ebook_format="epub")
-    print(params)
-    main(**params)
+    parser = configargparse.ArgParser()
+    parser.add('-c', '--conf-file', is_config_file=True,
+               help='Config file')
+    parser.add('-s', '--src_file_path', required=True, help='Book in source language')
+    parser.add('-t', '--tgt_file_path', required=True, help='Book in target language')
+    parser.add('-n', '--name', required=True, help='Short name for folder/files')
+    parser.add('-d', '--data_folder', required=False, help='Folder for input and output', default="data/books")
+    parser.add('-i', '--src_lan', required=True, help='Source language')
+    parser.add('-o', '--tgt_lan', required=True, help='Target language')
+    parser.add('-b', '--title', required=True, help='Book title')
+    parser.add('-a', '--author', required=True, help='Book author')
+    parser.add('-r', '--chapter_regex', required=True, help='Regex to detect a new chapter')
+    parser.add('-z', '--size', required=False, help='Font size', default=14)
+    parser.add('-y', '--stylesheet', required=False, help='Book author', default="lrstyle.css")
+    parser.add('-v', '--overlaps', required=False, help='Overlaps setting in vecalign', default=10)
+    parser.add('-l', '--align_size', required=False, help='Align setting in Laser', default=10)
+    parser.add('-e', '--search_buffer', required=False, help='Search buffer setting in Laser', default=10)
+    parser.add('-f', '--ebook_format', required=False, help='File format of the output ebook', default="epub")
+
+    options = parser.parse_args()
+
+    print("----------")
+    print(parser.format_values())
+
+    combine_books(src_file_path=options.src_file_path, tgt_file_path=options.tgt_file_path, name=options.name, src_lan=options.src_lan,
+        tgt_lan=options.tgt_lan, title=options.title, author=options.author, data_folder=options.data_folder, chapter_regex=options.chapter_regex,
+        size=options.size, stylesheet=options.stylesheet, overlaps=options.overlaps, align_size=options.align_size, search_buffer=options.search_buffer,
+        ebook_format=options.ebook_format)
