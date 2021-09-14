@@ -1,11 +1,12 @@
 import subprocess
 import os
 from pathlib import Path
+from urllib import request
+import urllib
 from txt_to_html import hun2html
 
 
 def create_folder(folder):
-
     path = Path(folder)
     try:
         path.mkdir(parents=True, exist_ok=False)
@@ -34,11 +35,16 @@ def add_russian_stresses(src_file_path, working_folder, name, src_lan):
     return src_file_path
 
 
-def download_models(my_env):
-    command = ["./laser/install_models.sh"]
-    print(" ".join(command), "\n")
-    subprocess.check_call(command, env=my_env)
-
+def download_models(model_folder = "laser/models"):
+    create_folder(model_folder)
+    url = "https://dl.fbaipublicfiles.com/laser/models"
+    models = ["bilstm.93langs.2018-12-26.pt", "93langs.fcodes", "93langs.fvocab"]
+    for model in models:
+        file = f"{model_folder}/{model}"
+        if Path(file).exists():
+            print(f"{file} is already downloaded")
+        else:
+            urllib.request.urlretrieve(f"{url}/{model}", file)
 
 
 
@@ -84,7 +90,7 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
     my_env = os.environ.copy()
     my_env["LASER"] = "./laser"
 
-    download_models(my_env)
+    download_models()
 
     # run commands to create sentence overlaps with vecalign/overlap.py and get embeddings for them from LASER laser/tasks/embed/embed.sh
     for command in commands:
