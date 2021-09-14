@@ -38,6 +38,13 @@ def add_russian_stresses(src_file_path, working_folder, name, src_lan):
     return src_file_path
 
 
+def download_models(my_env):
+    command = ["./laser/install_models.sh"]
+    print(" ".join(command), "\n")
+    subprocess.check_call(command, env=my_env)
+
+
+
 
 def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, title, author, chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet=None,
          overlaps="10", align_size="10", search_buffer="10", ebook_format="mobi"):
@@ -80,6 +87,8 @@ def main(src_file_path, tgt_file_path, data_folder, name, src_lan, tgt_lan, titl
 
     my_env = os.environ.copy()
     my_env["LASER"] = "./laser"
+
+    download_models(my_env)
 
     # run commands to create sentence overlaps with vecalign/overlap.py and get embeddings for them from LASER laser/tasks/embed/embed.sh
     for command in commands:

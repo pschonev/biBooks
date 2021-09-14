@@ -1,0 +1,11 @@
+MANIFEST.in
+README.md
+setup.py
+fastBPE/fastBPE.cpp
+fastBPE/fastBPE.hpp
+fastBPE/fastBPE.pyx
+fastBPE/main.cc
+fastBPE.egg-info/PKG-INFO
+fastBPE.egg-info/SOURCES.txt
+fastBPE.egg-info/dependency_links.txt
+fastBPE.egg-info/top_level.txt
