@@ -1,0 +1,15 @@
+name: holmes_four
+src_file_path: books/holmes_four/holmes_four_st.en
+tgt_file_path: books/holmes_four/holmes_four_st.de
+data_folder: books
+src_lan: en
+tgt_lan: de
+title: The Sign of the Four
+author: Arthur Conan Doyle
+chapter_regex: "CHAPTER .{1,4} .*"
+size: 14
+stylesheet: null
+overlaps: 10
+align_size: 10
+search_buffer: 10
+ebook_format: epub
