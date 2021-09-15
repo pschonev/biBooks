@@ -49,8 +49,8 @@ def download_models(model_folder = "laser/models"):
 
 
 
-def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="data/books", chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
-         overlaps=10, align_size=10, search_buffer=10, ebook_format="epub"):
+def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="books", chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
+         overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False):
 
     # create all folder and file names
     working_folder = f"{data_folder}/{name}"
@@ -125,6 +125,11 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
                  "--linearize-tables", "--authors", author, "--title", title]
     subprocess.check_call(cmd_ebook, env=my_env)
 
+    # delete temporary files
+    if not keep_temp_files:
+        for file in [src_overlap, tgt_overlap, src_emb, tgt_emb, align_file, aligned_sents, html_file]:
+            os.remove(file)
+
 
 if __name__ == '__main__':
 
@@ -134,7 +139,7 @@ if __name__ == '__main__':
     parser.add('-s', '--src_file_path', required=True, help='Book in source language')
     parser.add('-t', '--tgt_file_path', required=True, help='Book in target language')
     parser.add('-n', '--name', required=True, help='Short name for folder/files')
-    parser.add('-d', '--data_folder', required=False, help='Folder for input and output', default="data/books")
+    parser.add('-d', '--data_folder', required=False, help='Folder for input and output', default="books")
     parser.add('-i', '--src_lan', required=True, help='Source language')
     parser.add('-o', '--tgt_lan', required=True, help='Target language')
     parser.add('-b', '--title', required=True, help='Book title')
@@ -146,6 +151,7 @@ if __name__ == '__main__':
     parser.add('-l', '--align_size', required=False, help='Align setting in Laser', default=10)
     parser.add('-e', '--search_buffer', required=False, help='Search buffer setting in Laser', default=10)
     parser.add('-f', '--ebook_format', required=False, help='File format of the output ebook', default="epub")
+    parser.add('-x', '--keep_temp_files', required=False, help='Whether to keep the temporary files afterwards', default=False)
 
     options = parser.parse_args()
 
@@ -155,4 +161,4 @@ if __name__ == '__main__':
     combine_books(src_file_path=options.src_file_path, tgt_file_path=options.tgt_file_path, name=options.name, src_lan=options.src_lan,
         tgt_lan=options.tgt_lan, title=options.title, author=options.author, data_folder=options.data_folder, chapter_regex=options.chapter_regex,
         size=options.size, stylesheet=options.stylesheet, overlaps=options.overlaps, align_size=options.align_size, search_buffer=options.search_buffer,
-        ebook_format=options.ebook_format)
+        ebook_format=options.ebook_format, keep_temp_files=options.keep_temp_files)
