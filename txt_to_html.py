@@ -2,7 +2,7 @@ import regex as re
 from pathlib import Path
 
 
-def html_header(stylesheet='lrstyle.css'):
+def html_header(stylesheet=""):
     meta = '<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">'
     style = f'<link rel="stylesheet" href={stylesheet} type="text/css">'
     return f'<html><head>{meta}\n{style}\n</head><body>'
@@ -26,7 +26,7 @@ def paragraph_footer():
     return "</table>"
 
 
-def split_hunline(hunline, index):
+def split_tsvline(hunline, index):
     expanded = hunline.split("\t")
     if len(expanded) != 3 and len(expanded) != 2:
         raise ValueError(
@@ -34,8 +34,8 @@ def split_hunline(hunline, index):
     return expanded
 
 
-def hun2html_line(line, size, index):
-    expanded = split_hunline(line, index)
+def tsv2html_line(line, size, index):
+    expanded = split_tsvline(line, index)
     lrclass = "lraltline" if index % 2 else ""
     # now, is it a content line or just a matching blank?
     # content:
@@ -44,13 +44,13 @@ def hun2html_line(line, size, index):
             <tr class={lrclass}><td>{expanded[0]}</td>\n
             <td><i><span style="color:gray; font-size: {0.0625*size}em;">{expanded[1]}</span></i></td></tr>\n
             """
-    else:  # blank line -- this codepath can't be hit if called via hun2html_par
+    else:  # blank line -- this codepath can't be hit if called via tsv2html_bar
         htmlized_line = ""
     #print >> sys.stderr, index, htmlized_line
     return htmlized_line
 
 
-def hun2html_par(paragraph, size, chapter_regex):
+def tsv2html_bar(paragraph, size, chapter_regex):
     if not paragraph.strip():
         return ''
     lines = paragraph.strip('\n').split('\n')
@@ -62,14 +62,14 @@ def hun2html_par(paragraph, size, chapter_regex):
             par_text.append(paragraph_footer())
             par_text.append(paragraph_header(line, size))
         else:
-            par_text.append(hun2html_line(line, size, index))
+            par_text.append(tsv2html_line(line, size, index))
     par_text.append(paragraph_footer())
     return ''.join(par_text)
 
 
-def hun2html(contents, stylesheet, size=14, chapter_regex=r"NO REGEX GIVEN"):
+def tsv2html(contents, stylesheet, size=14, chapter_regex=r"NO REGEX GIVEN"):
     text = [html_header(stylesheet)]
-    text.append(hun2html_par(contents, size, chapter_regex))
+    text.append(tsv2html_bar(contents, size, chapter_regex))
     text.append(html_footer())
     return '\n'.join(text)
 
@@ -80,5 +80,5 @@ if __name__ == '__main__':
         print(f"Use: {sys.argv[0]} infile outfile")
         sys.exit(1)
     contents = open(sys.argv[1], "r").read()
-    out_str = hun2html(contents=contents, stylesheet=f"{Path().absolute()}/lrstyle.css", chapter_regex=r"Глав.*\d\.")
+    out_str = tsv2html(contents=contents, stylesheet="")
     open(sys.argv[2], "w").write(out_str)
