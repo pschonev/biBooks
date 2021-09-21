@@ -2,8 +2,9 @@ from re import search
 import subprocess
 import os
 from pathlib import Path
-import configargparse
-from txt_to_html import hun2html
+import shutil
+from jsonargparse import ArgumentParser, ActionConfigFile
+from txt_to_html import tsv2html
 from download_models import download_models
 
 
@@ -17,7 +18,7 @@ def create_folder(folder):
         print(f"Folder was created at {folder}")
 
 
-def add_russian_stresses(src_file_path, working_folder, name, src_lan):
+def add_russian_stresses(src_file_path, working_folder, name):
     import udar
     from tqdm import tqdm
 
@@ -30,19 +31,32 @@ def add_russian_stresses(src_file_path, working_folder, name, src_lan):
             "( ", "(").replace(" )", ")")
         out_str += f"{line}\n"
 
-    src_file_path = f"{working_folder}/{name}_st_em_a.{src_lan}"
+    src_file_path = f"{working_folder}/{name}_st_em_a.ru"
     open(src_file_path, "w").write(out_str)
 
     return src_file_path
 
 
 
-def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="books", chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="lrstyle.css",
-         overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False):
+def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="books", 
+        chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="",
+        overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False, underneath=True):
+    
+    for key, value in locals().items():
+        print(f"{key}:\t{value}") 
+    print("\n---------------\n")
 
     # create all folder and file names
     working_folder = f"{data_folder}/{name}"
     create_folder(working_folder)
+
+    # copy the stylesheet into the working folder
+    if stylesheet:
+        stylesheet_name = Path(stylesheet).name
+        shutil.copyfile(stylesheet, f'{working_folder}/{stylesheet_name}')
+        stylesheet=stylesheet_name
+
+
 
     src_overlap = f"{working_folder}/{name}_overlaps.{src_lan}"
     tgt_overlap = f"{working_folder}/{name}_overlaps.{tgt_lan}"
@@ -93,7 +107,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
 
     # add russian stresses
     if src_lan == "ru":
-        src_file_path = add_russian_stresses(src_file_path, working_folder, name, src_lan)
+        src_file_path = add_russian_stresses(src_file_path, working_folder, name)
 
     # use the resulting alignment file to create aligned sentence document
     out_str = ""
@@ -106,47 +120,53 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
         out_str = out_str.strip()
         outfile.write(out_str)
     open(html_file, "w").write(
-        hun2html(out_str, stylesheet, chapter_regex=chapter_regex))
+        tsv2html(out_str, stylesheet, chapter_regex=chapter_regex, size=int(size)))
 
     # convert HTML to ebook using Calibre
     cmd_ebook = ["ebook-convert", html_file, ebook_file,
-                 "--linearize-tables", "--authors", author, "--title", title]
+                 "--authors", author, "--title", title]
+    if underneath:
+        print("DO UNDERNEATH - ADD LINEARIZE TABLES")
+        print(type(underneath), underneath)
+        cmd_ebook.append("--linearize-tables")
+    print(" ".join(cmd_ebook), "\n")    
     subprocess.check_call(cmd_ebook, env=my_env)
 
     # delete temporary files
     if not keep_temp_files:
-        for file in [src_overlap, tgt_overlap, src_emb, tgt_emb, align_file, aligned_sents, html_file]:
+        files = [src_overlap, tgt_overlap, src_emb, tgt_emb, align_file, aligned_sents, html_file]
+        if stylesheet:
+            files.append(f'{working_folder}/{stylesheet_name}')
+        for file in files:
             os.remove(file)
 
 
 if __name__ == '__main__':
 
-    parser = configargparse.ArgParser()
-    parser.add('-c', '--conf-file', is_config_file=True,
+    parser = ArgumentParser()
+    parser.add_argument('-c', '--conf-file', action=ActionConfigFile,
                help='Config file')
-    parser.add('-s', '--src_file_path', required=True, help='Book in source language')
-    parser.add('-t', '--tgt_file_path', required=True, help='Book in target language')
-    parser.add('-n', '--name', required=True, help='Short name for folder/files')
-    parser.add('-d', '--data_folder', required=False, help='Folder for input and output', default="books")
-    parser.add('-i', '--src_lan', required=True, help='Source language')
-    parser.add('-o', '--tgt_lan', required=True, help='Target language')
-    parser.add('-b', '--title', required=True, help='Book title')
-    parser.add('-a', '--author', required=True, help='Book author')
-    parser.add('-r', '--chapter_regex', required=True, help='Regex to detect a new chapter')
-    parser.add('-z', '--size', required=False, help='Font size', default=14)
-    parser.add('-y', '--stylesheet', required=False, help='Book author', default="lrstyle.css")
-    parser.add('-v', '--overlaps', required=False, help='Overlaps setting in vecalign', default=10)
-    parser.add('-l', '--align_size', required=False, help='Align setting in Laser', default=10)
-    parser.add('-e', '--search_buffer', required=False, help='Search buffer setting in Laser', default=10)
-    parser.add('-f', '--ebook_format', required=False, help='File format of the output ebook', default="epub")
-    parser.add('-x', '--keep_temp_files', required=False, help='Whether to keep the temporary files afterwards', default=False)
+    parser.add_argument('-s', '--src_file_path', required=True, help='Book in source language')
+    parser.add_argument('-t', '--tgt_file_path', required=True, help='Book in target language')
+    parser.add_argument('-n', '--name', required=True, help='Short name for folder/files')
+    parser.add_argument('-d', '--data_folder', required=False, help='Folder for input and output', default="books")
+    parser.add_argument('-i', '--src_lan', required=True, help='Source language')
+    parser.add_argument('-o', '--tgt_lan', required=True, help='Target language')
+    parser.add_argument('-b', '--title', required=True, help='Book title')
+    parser.add_argument('-a', '--author', required=True, help='Book author')
+    parser.add_argument('-r', '--chapter_regex', required=True, help='Regex to detect a new chapter')
+    parser.add_argument('-z', '--size', required=False, help='Font size', default=14)
+    parser.add_argument('-y', '--stylesheet', required=False, help='Path to stylesheet', default="")
+    parser.add_argument('-v', '--overlaps', required=False, help='Overlaps setting in vecalign', default=10)
+    parser.add_argument('-l', '--align_size', required=False, help='Align setting in Laser', default=10)
+    parser.add_argument('-e', '--search_buffer', required=False, help='Search buffer setting in Laser', default=10)
+    parser.add_argument('-f', '--ebook_format', required=False, help='File format of the output ebook', default="epub")
+    parser.add_argument('-x', '--keep_temp_files', required=False, help='Whether to keep the temporary files afterwards', type=bool, default=False)
+    parser.add_argument('-u', '--underneath', required=False, help='Translations appear underneath instead of side by side', type=bool, default=True)
 
     options = parser.parse_args()
-
-    print("----------")
-    print(parser.format_values())
 
     combine_books(src_file_path=options.src_file_path, tgt_file_path=options.tgt_file_path, name=options.name, src_lan=options.src_lan,
         tgt_lan=options.tgt_lan, title=options.title, author=options.author, data_folder=options.data_folder, chapter_regex=options.chapter_regex,
         size=options.size, stylesheet=options.stylesheet, overlaps=options.overlaps, align_size=options.align_size, search_buffer=options.search_buffer,
-        ebook_format=options.ebook_format, keep_temp_files=options.keep_temp_files)
+        ebook_format=options.ebook_format, keep_temp_files=options.keep_temp_files, underneath=options.underneath)
