@@ -2,9 +2,9 @@ from re import search
 import subprocess
 import os
 from pathlib import Path
-import urllib
 import configargparse
 from txt_to_html import hun2html
+from download_models import download_models
 
 
 def create_folder(folder):
@@ -34,18 +34,6 @@ def add_russian_stresses(src_file_path, working_folder, name, src_lan):
     open(src_file_path, "w").write(out_str)
 
     return src_file_path
-
-
-def download_models(model_folder = "laser/models"):
-    create_folder(model_folder)
-    url = "https://dl.fbaipublicfiles.com/laser/models"
-    models = ["bilstm.93langs.2018-12-26.pt", "93langs.fcodes", "93langs.fvocab"]
-    for model in models:
-        file = f"{model_folder}/{model}"
-        if Path(file).exists():
-            print(f"{file} is already downloaded")
-        else:
-            urllib.request.urlretrieve(f"{url}/{model}", file)
 
 
 
