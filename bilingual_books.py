@@ -124,7 +124,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
 
     # convert HTML to ebook using Calibre
     cmd_ebook = ["ebook-convert", html_file, ebook_file,
-                 "--authors", author, "--title", title]
+                 "--authors", author, "--title", title, "--flow-size", "10000000"]
     if underneath:
         print("DO UNDERNEATH - ADD LINEARIZE TABLES")
         print(type(underneath), underneath)
