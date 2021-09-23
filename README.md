@@ -14,7 +14,7 @@ In general the two books have to provided in two files as a list of sentences se
 
 Using these two files, you can simply run `python bilingual_books.py` and provide arguments via a config file with `-c [config_path]` (see [configs](configs/) for examples) or via the command line. The result will be a finished eBook file.
 
-Below the steps to go through are described. Note that step 1-3 have examples in the [notebooks folder](notebooks/) and X-X are done automatically when running `bilingual_books.py`.
+Below the steps to go through are described. Note that step 1-3 have examples in the [notebooks folder](notebooks/) and 4-9 are done automatically when running `bilingual_books.py`.
 
 ###  Steps
 
