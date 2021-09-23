@@ -1,6 +1,6 @@
 # biBooks - Automatic Creation of Bilingual eBooks
 
-This repository allows the creation of an ebook with passages alternating in two languages for the purpose of language learning. Matching the two texts is done using [vecalign](https://github.com/thompsonb/vecalign) which itself relies on Facebook's language agnostic sentence representations [LASER](https://github.com/facebookresearch/LASER).
+This repository allows the creation of an ebook with text passages alternating in two languages for the purpose of language learning. Matching the two texts is done using [vecalign](https://github.com/thompsonb/vecalign) which itself relies on Facebook's language agnostic sentence representations [LASER](https://github.com/facebookresearch/LASER).
 
 ## Installation
 
