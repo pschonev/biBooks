@@ -1,47 +1,22 @@
-from re import search
 import subprocess
 import os
 from pathlib import Path
 import shutil
 from jsonargparse import ArgumentParser, ActionConfigFile
-from txt_to_html import tsv2html
-from download_models import download_models
-
-
-def create_folder(folder):
-    path = Path(folder)
-    try:
-        path.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        print(f"Folder is already there - {folder}")
-    else:
-        print(f"Folder was created at {folder}")
-
-
-def add_russian_stresses(src_file_path, working_folder, name):
-    import udar
-    from tqdm import tqdm
-
-    out_str = ""
-    in_str = open(src_file_path, "r").read()
-    for line in tqdm(in_str.split("\n")):
-        line = udar.Document(line).stressed()
-        line = line.replace(" ,", ",").replace("« ", "«").replace(
-            " »", "»").replace("< ", "<").replace(" >", ">").replace(
-            "( ", "(").replace(" )", ")")
-        out_str += f"{line}\n"
-
-    src_file_path = f"{working_folder}/{name}_st_em_a.ru"
-    open(src_file_path, "w").write(out_str)
-
-    return src_file_path
+from src.txt_to_html import tsv2html
+from src.download_models import download_models
+from src.utils import create_folder
 
 
 
 def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, author, data_folder="books", 
         chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="",
-        overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False, underneath=True):
+        overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False, underneath=True, russian_stresses=True):
+
+    if src_lan == "rus" and russian_stresses:
+        from src.russian_stresses import add_russian_stresses
     
+    # print parameters
     for key, value in locals().items():
         print(f"{key}:\t{value}") 
     print("\n---------------\n")
@@ -56,8 +31,6 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
         shutil.copyfile(stylesheet, f'{working_folder}/{stylesheet_name}')
         stylesheet=stylesheet_name
 
-
-
     src_overlap = f"{working_folder}/{name}_overlaps.{src_lan}"
     tgt_overlap = f"{working_folder}/{name}_overlaps.{tgt_lan}"
 
@@ -70,7 +43,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
     html_file = f"{working_folder}/{name}.html"
     ebook_file = f"{working_folder}/{name}.{ebook_format}"
 
-    #
+    # create all commands to run vecalign and laser
     commands = [
         # cmd_overlap_src
         ["python", "./vecalign/overlap.py",
@@ -107,7 +80,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
 
     # add russian stresses
     if src_lan == "ru":
-        src_file_path = add_russian_stresses(src_file_path, working_folder, name)
+        src_file_path = add_russian_stresses(src_file_path, new_path=f"{working_folder}/{name}_st_em_a.ru")
 
     # use the resulting alignment file to create aligned sentence document
     out_str = ""
@@ -163,10 +136,11 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--ebook_format', required=False, help='File format of the output ebook', default="epub")
     parser.add_argument('-x', '--keep_temp_files', required=False, help='Whether to keep the temporary files afterwards', type=bool, default=False)
     parser.add_argument('-u', '--underneath', required=False, help='Translations appear underneath instead of side by side', type=bool, default=True)
+    parser.add_argument('-w', '--russian_stresses', required=False, help='Add stresses to Russian text if it is source (requires udar)', type=bool, default=True)
 
     options = parser.parse_args()
 
     combine_books(src_file_path=options.src_file_path, tgt_file_path=options.tgt_file_path, name=options.name, src_lan=options.src_lan,
         tgt_lan=options.tgt_lan, title=options.title, author=options.author, data_folder=options.data_folder, chapter_regex=options.chapter_regex,
         size=options.size, stylesheet=options.stylesheet, overlaps=options.overlaps, align_size=options.align_size, search_buffer=options.search_buffer,
-        ebook_format=options.ebook_format, keep_temp_files=options.keep_temp_files, underneath=options.underneath)
+        ebook_format=options.ebook_format, keep_temp_files=options.keep_temp_files, underneath=options.underneath, russian_stresses=options.russian_stresses)
