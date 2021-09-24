@@ -1,7 +1,7 @@
 
 from pathlib import Path
 import argparse
-import urllib
+import urllib.request
 
 def create_folder(folder):
     path = Path(folder)
