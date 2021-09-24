@@ -2,15 +2,8 @@
 from pathlib import Path
 import argparse
 import urllib.request
+from src.utils import create_folder
 
-def create_folder(folder):
-    path = Path(folder)
-    try:
-        path.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        print(f"Folder is already there - {folder}")
-    else:
-        print(f"Folder was created at {folder}")
 
 def download_models(model_folder = "laser/models"):
     create_folder(model_folder)
@@ -21,6 +14,7 @@ def download_models(model_folder = "laser/models"):
         if Path(file).exists():
             print(f"{file} is already downloaded")
         else:
+            print(f"Downloading {url}/{model}")
             urllib.request.urlretrieve(f"{url}/{model}", file)
 
 if __name__ == '__main__':
