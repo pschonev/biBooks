@@ -1,0 +1,17 @@
+name: hero
+src_file_path: books/hero/hero_st.ru
+tgt_file_path: books/hero/hero_st.de
+data_folder: books
+src_lan: ru
+tgt_lan: de
+title: Герой нашего времени
+author: Михаил Юрьевич Лермонтов
+chapter_regex: 'I{1,3}(\s|\n).*'
+size: 14
+overlaps: 10
+align_size: 10
+search_buffer: 10
+ebook_format: epub
+stylesheet: styles/sidebyside.css
+keep_temp_files: False
+underneath: False
