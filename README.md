@@ -4,9 +4,23 @@ This repository allows the creation of an ebook with text passages alternating i
 
 ## Installation
 
-- Clone the repository and install the requirements
-- Run `python download_models.py` to get the necessary LASER models
-- Install [Calibre](https://calibre-ebook.com/) as this will be used to convert our generated HTML files to the desired eBook format
+It is recommended to clone the repository, create a virtual environment and then install all requirements.
+
+```
+git clone https://github.com/pschonev/biBooks.git
+cd biBooks
+virtualenv -p python3 venv
+. venv/bin/activate
+```
+
+And then to install everything run
+```
+pip install -e .[full]
+```
+
+Next run `python src/download_models.py` to get the necessary LASER models.
+
+Finally install [Calibre](https://calibre-ebook.com/) as this will be used to convert our generated HTML files to the desired eBook format.
 
 ## Basic Usage
 
