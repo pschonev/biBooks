@@ -13,7 +13,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
         chapter_regex=r"NO REGEX GIVEN", size=14, stylesheet="",
         overlaps=10, align_size=10, search_buffer=10, ebook_format="epub", keep_temp_files=False, underneath=True, russian_stresses=True):
 
-    if src_lan == "rus" and russian_stresses:
+    if src_lan == "ru" and russian_stresses:
         from src.russian_stresses import add_russian_stresses
     
     # print parameters
@@ -79,7 +79,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
     subprocess.check_call(cmd_align, stdout=open(align_file, 'w'), env=my_env)
 
     # add russian stresses
-    if src_lan == "rus" and russian_stresses:
+    if src_lan == "ru" and russian_stresses:
         src_file_path = add_russian_stresses(src_file_path, new_path=f"{working_folder}/{name}_st_em_a.ru")
 
     # use the resulting alignment file to create aligned sentence document
