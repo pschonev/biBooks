@@ -79,7 +79,7 @@ def combine_books(src_file_path, tgt_file_path, name, src_lan, tgt_lan, title, a
     subprocess.check_call(cmd_align, stdout=open(align_file, 'w'), env=my_env)
 
     # add russian stresses
-    if src_lan == "ru":
+    if src_lan == "rus" and russian_stresses:
         src_file_path = add_russian_stresses(src_file_path, new_path=f"{working_folder}/{name}_st_em_a.ru")
 
     # use the resulting alignment file to create aligned sentence document
